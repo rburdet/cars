@@ -1,0 +1,30 @@
+{
+  "name": "mercadolibre-local-scraper",
+  "version": "1.0.0",
+  "description": "Local MercadoLibre scraper that uploads to Cloudflare KV",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js",
+    "install-deps": "npm install",
+    "scrape": "node scraper.js"
+  },
+  "dependencies": {
+    "puppeteer": "^21.6.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "scraper",
+    "mercadolibre",
+    "puppeteer",
+    "cloudflare",
+    "cars"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 

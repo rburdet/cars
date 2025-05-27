@@ -1,0 +1,10 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f3f4f6"/>
+  <path d="M100 150 L120 130 L280 130 L300 150 L320 150 L320 200 L300 200 L290 210 L110 210 L100 200 Z" fill="#9ca3af"/>
+  <circle cx="140" cy="200" r="20" fill="#374151"/>
+  <circle cx="260" cy="200" r="20" fill="#374151"/>
+  <circle cx="140" cy="200" r="12" fill="#6b7280"/>
+  <circle cx="260" cy="200" r="12" fill="#6b7280"/>
+  <rect x="130" y="140" width="140" height="40" rx="5" fill="#6b7280"/>
+  <text x="200" y="250" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="14">Auto no disponible</text>
+</svg> 
