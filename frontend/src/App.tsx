@@ -50,10 +50,10 @@ function CarsApp() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-3">
             <CarIcon className="h-10 w-10 text-blue-600" />
-            MercadoLibre Autos
+            AUTOFOCO
           </h1>
           <p className="text-gray-600 text-lg">
-            Explora miles de autos disponibles en Argentina
+            Professional automotive marketplace - Explore thousands of quality vehicles
           </p>
         </div>
 
