@@ -16,6 +16,15 @@ id = "677b8c8790fc44a58eaad0a3f2f89c3f"
 [vars]
 NODE_ENV = "production"
 
+# Development environment
+[env.development]
+[[env.development.kv_namespaces]]
+binding = "CAR_LISTINGS"
+id = "677b8c8790fc44a58eaad0a3f2f89c3f"
+
+[env.development.vars]
+NODE_ENV = "development"
+
 # Preview environment
 [env.preview]
 [[env.preview.kv_namespaces]]

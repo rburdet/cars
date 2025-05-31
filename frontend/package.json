@@ -7,11 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist",
-    "deploy:dev": "npm run build && wrangler pages deploy dist --env development",
-    "kv:list": "wrangler kv:namespace list",
-    "kv:create": "wrangler kv:namespace create CAR_LISTINGS"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",

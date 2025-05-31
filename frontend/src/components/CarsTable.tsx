@@ -143,9 +143,32 @@ const MobileCarCard: React.FC<{ car: Car }> = ({ car }) => {
           {car.seller && (
             <div className="flex items-center gap-1 text-xs sm:text-sm">
               <User className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-gray-600 truncate">
-                {car.seller.type} {car.seller.name && `- ${car.seller.name}`}
-              </span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-gray-600 truncate font-medium">
+                  {car.seller.name || car.seller.type}
+                </span>
+                <Badge variant="outline" className="text-xs w-fit">
+                  {car.seller.type}
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          {car.features && car.features.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-xs text-gray-500 font-medium">Features:</div>
+              <div className="flex flex-wrap gap-1">
+                {car.features.slice(0, 4).map((feature, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {feature}
+                  </Badge>
+                ))}
+                {car.features.length > 4 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{car.features.length - 4} more
+                  </Badge>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -280,9 +303,9 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars }) => {
             </div>
           </div>
         ),
-        size: 350,
-        minSize: 300,
-        maxSize: 400,
+        size: 300,
+        minSize: 250,
+        maxSize: 350,
         enableSorting: true,
       }),
       columnHelper.accessor('priceUSD', {
@@ -328,29 +351,56 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars }) => {
         maxSize: 170,
         enableSorting: true,
       }),
-      columnHelper.accessor('seller.type', {
+      columnHelper.accessor('seller', {
         header: 'Seller',
-        cell: (info) => info.getValue() || '-',
-        size: 100,
-        minSize: 90,
-        maxSize: 120,
+        cell: (info) => {
+          const seller = info.getValue();
+          return seller ? (
+            <div className="text-sm">
+              <div className="font-medium truncate" title={seller.name}>
+                {seller.name || seller.type}
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {seller.type}
+              </Badge>
+            </div>
+          ) : '-';
+        },
+        size: 180,
+        minSize: 160,
+        maxSize: 200,
         enableSorting: true,
+        sortingFn: (rowA, rowB) => {
+          const sellerA = rowA.original.seller?.name || rowA.original.seller?.type || '';
+          const sellerB = rowB.original.seller?.name || rowB.original.seller?.type || '';
+          return sellerA.localeCompare(sellerB);
+        },
       }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Actions',
-        cell: (info) => (
-          <Button
-            size="sm"
-            onClick={() => window.open(info.row.original.link, '_blank')}
-            disabled={!info.row.original.link}
-          >
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-        ),
-        size: 80,
-        minSize: 70,
-        maxSize: 90,
+      columnHelper.accessor('features', {
+        header: 'Features',
+        cell: (info) => {
+          const features = info.getValue();
+          if (!features || features.length === 0) return '-';
+          
+          return (
+            <div className="flex flex-wrap gap-1">
+              {features.slice(0, 3).map((feature, index) => (
+                <Badge key={index} variant="secondary" className="text-xs truncate max-w-20" title={feature}>
+                  {feature}
+                </Badge>
+              ))}
+              {features.length > 3 && (
+                <Badge variant="outline" className="text-xs" title={`+${features.length - 3} more features`}>
+                  +{features.length - 3}
+                </Badge>
+              )}
+            </div>
+          );
+        },
+        enableSorting: false,
+        size: 200,
+        minSize: 180,
+        maxSize: 220,
       }),
     ],
     []
@@ -479,11 +529,18 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars }) => {
               return (
                 <div
                   key={row.id}
-                  className="flex border-b hover:bg-gray-50 absolute w-full"
+                  className="flex border-b hover:bg-gray-50 absolute w-full cursor-pointer"
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
+                  onClick={() => {
+                    const car = row.original;
+                    if (car.link) {
+                      window.open(car.link, '_blank');
+                    }
+                  }}
+                  title="Click to view on MercadoLibre"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <div

@@ -4,7 +4,9 @@
   "description": "MercadoLibre scraper with Cloudflare Workers Static Assets",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --env development",
+    "dev:local": "wrangler dev --local --env development",
+    "dev:remote": "wrangler dev --remote --env development",
     "deploy": "npm run build:frontend && wrangler deploy",
     "deploy:dev": "npm run build:frontend && wrangler deploy --env development",
     "build:frontend": "cd frontend && npm install && npm run build",
