@@ -165,7 +165,7 @@ const MobileCarCard: React.FC<{ car: Car }> = ({ car }) => {
 
 const columnHelper = createColumnHelper<Car>();
 
-export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
+export const CarsTable: React.FC<CarsTableProps> = ({ cars }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
