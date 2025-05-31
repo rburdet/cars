@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy:dev": "npm run build && wrangler pages deploy dist --env development",
+    "kv:list": "wrangler kv:namespace list",
+    "kv:create": "wrangler kv:namespace create CAR_LISTINGS"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",
@@ -39,6 +43,7 @@
     "tw-animate-css": "^1.3.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "wrangler": "^4.17.0"
   }
 }

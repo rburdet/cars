@@ -1,0 +1,21 @@
+{
+  "name": "merk2-scrapper",
+  "version": "1.0.0",
+  "description": "MercadoLibre scraper with Cloudflare Workers Static Assets",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "npm run build:frontend && wrangler deploy",
+    "deploy:dev": "npm run build:frontend && wrangler deploy --env development",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "preview": "wrangler dev --local",
+    "kv:list": "wrangler kv:namespace list",
+    "kv:create": "wrangler kv:namespace create CAR_LISTINGS"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.17.0"
+  },
+  "dependencies": {}
+} 

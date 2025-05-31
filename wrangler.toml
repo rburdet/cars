@@ -1,0 +1,26 @@
+name = "merk2-scrapper"
+main = "src/index.ts"
+compatibility_date = "2024-06-01"
+
+# Static Assets configuration
+[assets]
+directory = "frontend/dist"
+binding = "ASSETS"
+
+# KV namespace binding for production
+[[kv_namespaces]]
+binding = "CAR_LISTINGS"
+id = "677b8c8790fc44a58eaad0a3f2f89c3f"
+
+# Environment variables for production
+[vars]
+NODE_ENV = "production"
+
+# Preview environment
+[env.preview]
+[[env.preview.kv_namespaces]]
+binding = "CAR_LISTINGS"
+id = "677b8c8790fc44a58eaad0a3f2f89c3f"
+
+[env.preview.vars]
+NODE_ENV = "preview" 

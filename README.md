@@ -1,261 +1,229 @@
-# MercadoLibre Autos Scraper
+# 🚗 MercadoLibre Auto Scraper - Workers Static Assets
 
-A production-ready Cloudflare Workers scraper specifically designed for MercadoLibre's automotive section. Built to handle large-scale car listing extraction with anti-detection measures and KV storage.
+A full-stack MercadoLibre auto scraper built with **Cloudflare Workers Static Assets**, React, and TypeScript. This application scrapes car listings from MercadoLibre Argentina and provides a modern web interface to browse and analyze the data.
 
-## 🚀 Features
+## 🏗️ Architecture
 
-- **Infinite Search**: Scrape all available cars with pagination support
-- **Auto-Store**: Automatically save results to KV storage
-- **Bulk Retrieval**: Get all stored car collections at once
-- **Anti-Detection**: Browser-like headers and rate limiting
-- **Production Ready**: Deployed on Cloudflare Workers with KV storage
-- **Comprehensive Data**: Extract car details, prices, images, seller info
+This project uses **Cloudflare Workers Static Assets** for a unified full-stack deployment:
 
-## 📊 Current Database Status
+- **Frontend**: React + TypeScript + Vite (served as static assets)
+- **Backend**: Cloudflare Worker with API handlers
+- **Storage**: Cloudflare KV for persistent data
+- **Deployment**: Single domain, same-origin architecture
 
-As of latest update, we have **199 cars** stored across **4 collections**:
-- **Toyota Yaris**: 96 cars (infinite search, 2 pages)
-- **Honda Fit**: 96 cars (infinite search, 2 pages)  
-- **Chevrolet Cruze**: 5 cars (limited search)
-- **Ford Focus**: 2 cars (limited search)
+## ✨ Features
 
-## 🔗 Live API
+- 🔍 **Real-time scraping** of MercadoLibre car listings
+- 📊 **Interactive dashboard** with statistics and filters
+- 💾 **Persistent storage** in Cloudflare KV
+- 🌐 **Same-domain deployment** (no CORS issues)
+- 📱 **Responsive design** with modern UI components
+- 💱 **Currency conversion** (ARS to USD)
+- 🔄 **Infinite pagination** support
+- 📈 **Data visualization** and analytics
 
-**Base URL**: `https://ml-autos-scraper.rodrigoburdet.workers.dev`
+## 🚀 Quick Start
 
-### Endpoints
+### Prerequisites
 
-#### 1. Search Cars
+- Node.js 18+
+- Cloudflare account
+- Wrangler CLI
+
+### Installation
+
 ```bash
-GET /search-autos?brand={brand}&model={model}&limit={limit}&store={true/false}
+# Clone the repository
+git clone <repository-url>
+cd merk2-scrapper
+
+# Install dependencies
+npm install
+
+# Build frontend
+npm run build:frontend
+
+# Start development server
+npm run dev
 ```
 
-**Parameters:**
-- `brand` (required): Car brand (e.g., toyota, ford, honda)
-- `model` (required): Car model (e.g., yaris, focus, fit)
-- `limit` (optional): Number of cars to scrape
-  - Default: `20`
-  - Use `infinite` or `0` for unlimited scraping (scrapes ALL pages until no "Siguiente" button)
-- `store` (optional): Auto-store results (`true`/`false`)
+### Deployment
 
-**Examples:**
 ```bash
-# Basic search
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/search-autos?brand=toyota&model=yaris"
+# Deploy to production
+npm run deploy
 
-# Infinite search with auto-store (all pages)
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/search-autos?brand=honda&model=civic&limit=infinite&store=true"
-
-# Limited search
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/search-autos?brand=ford&model=focus&limit=10"
+# Deploy to development environment
+npm run deploy:dev
 ```
 
-#### 2. Store Cars
-```bash
-POST /store-cars
-Content-Type: application/json
-
-{
-  "brand": "toyota",
-  "model": "yaris", 
-  "cars": [...]
-}
-```
-
-#### 3. Get Stored Cars
-```bash
-GET /get-cars?brand={brand}&model={model}
-```
-
-#### 4. Get All Collections
-```bash
-GET /get-all-cars
-```
-
-#### 5. Debug HTML
-```bash
-GET /debug-html?brand={brand}&model={model}
-```
-
-## 🛠 Development Tools
-
-### Node.js Client
-```javascript
-const client = require('./scripts/scraper-client.js');
-
-// Search and auto-store
-const result = await client.searchCars('toyota', 'corolla', 'infinite', true, 3);
-
-// Get all collections
-const collections = await client.getAllCars();
-```
-
-### Batch Processing
-```bash
-# Make executable
-chmod +x scripts/batch-scrape.sh
-
-# Run batch scraping
-./scripts/batch-scrape.sh
-```
-
-## 📋 Response Format
-
-### Search Response
-```json
-{
-  "cars": [
-    {
-      "id": "1499874719",
-      "title": "Toyota Yaris 1.5 107cv S Cvt",
-      "price": {
-        "currency": "US$",
-        "amount": 30800
-      },
-      "year": 2025,
-      "kilometers": 0,
-      "location": "Buenos Aires",
-      "link": "https://auto.mercadolibre.com.ar/MLA-1499874719-...",
-      "thumbnail": "https://http2.mlstatic.com/D_Q_NP_2X_969564-...",
-      "seller": {
-        "type": "Concesionaria",
-        "name": "Toyota Official"
-      },
-      "features": []
-    }
-  ],
-  "search": {
-    "brand": "toyota",
-    "model": "yaris",
-    "method": "infinite",
-    "pagesScraped": 2,
-    "executionTimeMs": 1592,
-    "stats": {
-      "carsFound": 96,
-      "totalCarsBeforeDedup": 96,
-      "duplicatesRemoved": 0
-    }
-  },
-  "autoStore": {
-    "success": true,
-    "key": "toyota-yaris",
-    "stored": 96,
-    "lastUpdated": "2025-05-26T03:53:57.809Z"
-  }
-}
-```
-
-### Collections Response
-```json
-{
-  "totalCollections": 4,
-  "totalCars": 199,
-  "collections": [
-    {
-      "key": "honda-fit",
-      "brand": "honda", 
-      "model": "fit",
-      "count": 96,
-      "lastUpdated": "2025-05-26T03:54:43.106Z",
-      "cars": [...]
-    }
-  ]
-}
-```
-
-## ⚡ Performance & Limits
-
-- **Execution Time**: 15-second limit for infinite searches
-- **Default Pages**: 3 pages max (configurable via `maxPages`)
-- **Rate Limiting**: 200ms delay between pages
-- **Deduplication**: Automatic removal of duplicate cars by ID
-- **Resource Management**: Optimized for Cloudflare Workers limits
-
-## 🏗 Architecture
+## 📁 Project Structure
 
 ```
-src/
-├── autos-scraper.js     # Main worker with infinite search
-├── worker.js            # Legacy general scraper
-scripts/
-├── scraper-client.js    # Node.js client library
-└── batch-scrape.sh      # Batch processing script
+merk2-scrapper/
+├── src/                        # Worker source code
+│   ├── index.ts               # Main Worker entry point
+│   ├── types.ts               # TypeScript interfaces
+│   └── api/                   # API handlers
+│       ├── search-autos.ts    # MercadoLibre scraper
+│       ├── get-cars.ts        # Retrieve stored cars
+│       └── get-all-cars.ts    # List all collections
+├── frontend/                   # React frontend
+│   ├── src/                   # Frontend source code
+│   ├── dist/                  # Build output (served as static assets)
+│   └── package.json           # Frontend dependencies
+├── wrangler.toml              # Worker configuration
+├── package.json               # Worker dependencies
+└── tsconfig.json              # TypeScript config
 ```
-
-### Key Components
-
-1. **MercadoLibreAutosScraper**: Core scraping class with car-specific logic
-2. **HTMLRewriter**: Cloudflare's streaming HTML parser
-3. **Infinite Search**: Pagination-based scraping with resource management
-4. **KV Storage**: Persistent storage for car collections
-5. **Anti-Detection**: Browser-like headers and respectful delays
 
 ## 🔧 Configuration
 
-### wrangler.toml
-```toml
-name = "ml-autos-scraper"
-main = "src/autos-scraper.js"
-compatibility_date = "2024-06-01"
+### Environment Variables
 
-[[kv_namespaces]]
-binding = "CAR_LISTINGS"
-id = "677b8c8790fc44a58eaad0a3f2f89c3f"
+The project supports multiple environments:
+
+- **Production**: `NODE_ENV=production`
+- **Development**: `NODE_ENV=development`
+- **Preview**: `NODE_ENV=preview`
+
+### KV Storage
+
+- **Namespace ID**: `677b8c8790fc44a58eaad0a3f2f89c3f`
+- **Binding Name**: `CAR_LISTINGS`
+
+## 📡 API Endpoints
+
+### Search Cars
+```
+GET /api/search-autos?brand=toyota&model=yaris&limit=20
 ```
 
-## 🚀 Deployment
+### Infinite Search with Storage
+```
+GET /api/search-autos?brand=honda&model=civic&limit=infinite&store=true
+```
+
+### Get Stored Cars
+```
+GET /api/get-cars?brand=toyota&model=yaris
+```
+
+### Get All Collections
+```
+GET /api/get-all-cars
+```
+
+## 🛠️ Development
+
+### Local Development
 
 ```bash
-# Deploy to Cloudflare Workers
-wrangler deploy
+# Start development server
+npm run dev
 
-# Test deployment
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/search-autos?brand=toyota&model=yaris&limit=5"
+# Build frontend only
+npm run build:frontend
+
+# Preview locally
+npm run preview
 ```
 
-## 📈 Usage Examples
+### KV Management
 
-### Scrape All Toyota Yaris (Infinite)
 ```bash
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/search-autos?brand=toyota&model=yaris&limit=infinite&store=true&maxPages=5"
+# List KV namespaces
+npm run kv:list
+
+# Create new KV namespace
+npm run kv:create
 ```
 
-### Get Specific Collection
+## 🔄 Migration from Pages
+
+This project was migrated from Cloudflare Pages to Workers Static Assets. See [WORKERS_MIGRATION_GUIDE.md](./WORKERS_MIGRATION_GUIDE.md) for detailed migration information.
+
+### Key Benefits of Migration
+
+- ✅ **Better Performance**: Faster cold starts and edge optimization
+- ✅ **Unified Architecture**: Single deployment for frontend and backend
+- ✅ **Enhanced Observability**: Workers Logs, Logpush, Tail Workers
+- ✅ **Advanced Features**: Better routing, middleware support
+- ✅ **Same Domain**: No CORS issues, simplified configuration
+
+## 📊 Features
+
+### Frontend
+- Modern React UI with shadcn/ui components
+- Real-time data fetching with TanStack Query
+- Responsive design with Tailwind CSS
+- Interactive data tables with sorting and filtering
+- Currency conversion (ARS to USD)
+- Statistics dashboard
+
+### Backend
+- MercadoLibre scraper with HTML parsing
+- Infinite pagination support
+- Auto-storage in Cloudflare KV
+- CORS handling
+- Error handling and logging
+
+## 🔍 Usage Examples
+
+### Basic Search
 ```bash
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/get-cars?brand=honda&model=fit"
+curl "https://your-domain.workers.dev/api/search-autos?brand=toyota&model=yaris&limit=10"
 ```
 
-### View All Collections Summary
+### Infinite Search with Storage
 ```bash
-curl "https://ml-autos-scraper.rodrigoburdet.workers.dev/get-all-cars" | jq '.collections[] | {brand, model, count}'
+curl "https://your-domain.workers.dev/api/search-autos?brand=ford&model=focus&limit=infinite&store=true"
 ```
 
-## 🛡 Anti-Detection Features
+### Get Statistics
+```bash
+curl "https://your-domain.workers.dev/api/get-all-cars"
+```
 
-- **Realistic Headers**: Full browser-like request headers
-- **Rate Limiting**: Configurable delays between requests
-- **User Agent**: Latest Chrome user agent string
-- **Referer**: Proper referer headers
-- **Connection Management**: Keep-alive and proper caching
+## 🚀 Deployment Options
 
-## 📊 Monitoring
+### 1. CLI Deployment
+```bash
+npm run deploy
+```
 
-The scraper provides detailed metrics:
-- Cars found per page
-- Execution time tracking
-- Deduplication statistics
-- Storage success/failure rates
-- Page scraping progress
+### 2. GitHub Integration
+Connect your repository to Cloudflare for automatic deployments on push.
 
-## 🔄 Future Enhancements
+### 3. Manual Upload
+Use the Cloudflare dashboard to upload your built Worker.
 
-- [ ] Advanced filtering (price range, year, etc.)
-- [ ] Real-time notifications for new listings
-- [ ] Historical price tracking
-- [ ] Image analysis and classification
-- [ ] Seller reputation scoring
-- [ ] Geographic clustering of listings
+## 📈 Monitoring
+
+- **Workers Analytics**: Built-in request metrics
+- **Real-time Logs**: Available in Cloudflare dashboard
+- **KV Metrics**: Storage usage and operation counts
+- **Error Tracking**: Automatic error logging
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For issues and questions:
+- Check the [Migration Guide](./WORKERS_MIGRATION_GUIDE.md)
+- Review [Cloudflare Workers docs](https://developers.cloudflare.com/workers/)
+- Open an issue in this repository
 
 ---
 
-**Built with ❤️ for efficient car market analysis** 
+**Built with ❤️ using Cloudflare Workers Static Assets** 

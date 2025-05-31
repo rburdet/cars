@@ -167,61 +167,71 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
                 }}
               />
             )}
-            <div>
-              <div className="font-medium text-sm">{info.getValue()}</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm truncate">{info.getValue()}</div>
               {info.row.original.year && (
                 <div className="text-xs text-gray-500">Year: {info.row.original.year}</div>
               )}
             </div>
           </div>
         ),
-        size: 300,
+        size: 350,
+        minSize: 300,
+        maxSize: 400,
         enableSorting: true,
       }),
       columnHelper.accessor('priceUSD', {
         header: 'Price (USD)',
         cell: (info) => (
-          <div className="font-semibold text-green-600">
+          <div className="font-semibold text-green-600 text-right">
             {formatUSD(info.getValue() || 0)}
             <div className="text-xs text-gray-500">
               {getOriginalPriceDisplay(info.row.original.price)}
             </div>
           </div>
         ),
-        size: 140,
+        size: 130,
+        minSize: 120,
+        maxSize: 150,
         enableSorting: true,
         sortingFn: 'basic',
       }),
       columnHelper.accessor('kilometers', {
         header: 'Kilometers',
         cell: (info) => (
-          <div className="text-sm">
+          <div className="text-sm text-center">
             {info.getValue()?.toLocaleString() || 'N/A'}
           </div>
         ),
-        size: 100,
+        size: 110,
+        minSize: 100,
+        maxSize: 120,
         enableSorting: true,
         sortingFn: 'basic',
       }),
       columnHelper.accessor('year', {
         header: 'Year',
         cell: (info) => (
-          <div className="text-sm">
+          <div className="text-sm text-center">
             {info.getValue() || 'N/A'}
           </div>
         ),
-        size: 80,
+        size: 70,
+        minSize: 60,
+        maxSize: 80,
         enableSorting: true,
         sortingFn: 'basic',
       }),
       columnHelper.accessor('location', {
         header: 'Location',
         cell: (info) => (
-          <div className="text-sm">
+          <div className="text-sm truncate" title={info.getValue()}>
             {info.getValue() || 'N/A'}
           </div>
         ),
-        size: 150,
+        size: 140,
+        minSize: 120,
+        maxSize: 160,
         enableSorting: true,
       }),
       columnHelper.accessor('seller', {
@@ -232,7 +242,7 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
             <div className="text-sm">
               {seller ? (
                 <div>
-                  <div className="font-medium">{seller.name}</div>
+                  <div className="font-medium truncate" title={seller.name}>{seller.name}</div>
                   <Badge variant="outline" className="text-xs">
                     {seller.type}
                   </Badge>
@@ -241,7 +251,9 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
             </div>
           );
         },
-        size: 120,
+        size: 140,
+        minSize: 120,
+        maxSize: 160,
         enableSorting: true,
         sortingFn: (rowA, rowB) => {
           const sellerA = rowA.original.seller?.name || '';
@@ -254,7 +266,7 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
         cell: (info) => (
           <div className="flex flex-wrap gap-1">
             {info.getValue()?.slice(0, 2).map((feature, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
+              <Badge key={index} variant="secondary" className="text-xs truncate max-w-20" title={feature}>
                 {feature}
               </Badge>
             ))}
@@ -266,25 +278,30 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
           </div>
         ),
         enableSorting: false,
-        size: 150,
+        size: 180,
+        minSize: 150,
+        maxSize: 200,
       }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
         cell: (info) => (
-          <div className="flex space-x-2">
+          <div className="flex justify-center">
             {info.row.original.link && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => window.open(info.row.original.link, '_blank')}
+                title="View on MercadoLibre"
               >
                 <ExternalLink className="w-4 h-4" />
               </Button>
             )}
           </div>
         ),
-        size: 80,
+        size: 90,
+        minSize: 80,
+        maxSize: 100,
         enableSorting: false,
       }),
     ],
@@ -501,13 +518,13 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
                 {headerGroup.headers.map((header) => (
                   <div
                     key={header.id}
-                    className="px-4 py-3 text-left text-sm font-medium text-gray-900 border-r last:border-r-0"
+                    className="px-3 py-2 text-left text-sm font-medium text-gray-900 border-r last:border-r-0"
                     style={{ width: header.getSize() }}
                   >
                     {header.isPlaceholder ? null : (
                       <div
                         className={`flex items-center space-x-1 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100 rounded px-2 py-1' : ''
+                          header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100 rounded px-1 py-1' : ''
                         }`}
                         onClick={header.column.getToggleSortingHandler()}
                       >

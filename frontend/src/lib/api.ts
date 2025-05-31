@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://ml-autos-scraper.rodrigoburdet.workers.dev';
+// Use relative URLs for same-domain deployment (Cloudflare Workers Static Assets)
+// In production, this will be the same domain as the frontend
+// In development with wrangler dev, use localhost
+const API_BASE_URL = import.meta.env.PROD 
+  ? '' // Production: same domain (Workers Static Assets)
+  : (import.meta.env.DEV ? 'http://localhost:8787' : ''); // Development: local wrangler dev
 
 export interface Car {
   id: string;
@@ -97,22 +102,34 @@ export const carsApi = {
     brand?: string;
     model?: string;
   }): Promise<CarsResponse> => {
-    const response = await api.get('/api/cars', { params });
-    return response.data;
+    // For now, use the search endpoint with default brand/model
+    const response = await api.get('/api/search-autos', { 
+      params: { 
+        brand: params?.brand || 'toyota',
+        model: params?.model || 'yaris',
+        limit: params?.limit || 20
+      } 
+    });
+    
+    // Transform the response to match expected format
+    const data = response.data;
+    return {
+      cars: data.cars || [],
+      pagination: {
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        total: data.count || 0,
+        totalPages: Math.ceil((data.count || 0) / (params?.limit || 20)),
+        hasNext: false,
+        hasPrev: false
+      }
+    };
   },
 
   // Get ALL cars without pagination (for table view)
   getAllCars: async (): Promise<Car[]> => {
     try {
-      // Try the new API endpoint first
-      const response = await api.get('/api/cars', { 
-        params: { limit: 10000 } // Request a very high limit to get all cars
-      });
-      return response.data.cars || [];
-    } catch (error) {
-      // Fallback to the legacy endpoint
-      console.log('Trying legacy endpoint...');
-      const response = await api.get('/get-all-cars');
+      const response = await api.get('/api/get-all-cars');
       // Transform the collections response to a flat array of cars
       const collections = response.data.collections || [];
       const allCars: Car[] = [];
@@ -124,6 +141,9 @@ export const carsApi = {
       });
       
       return allCars;
+    } catch (error) {
+      console.error('Error fetching all cars:', error);
+      return [];
     }
   },
 
@@ -136,25 +156,105 @@ export const carsApi = {
     maxPrice?: string;
     year?: string;
   }): Promise<SearchResponse> => {
-    const response = await api.get('/api/cars/search', { params });
-    return response.data;
+    // Parse the search query to extract brand and model
+    const queryParts = params.q.toLowerCase().split(' ');
+    const brand = queryParts[0] || 'toyota';
+    const model = queryParts[1] || 'yaris';
+    
+    const response = await api.get('/api/search-autos', { 
+      params: { 
+        brand,
+        model,
+        limit: params.limit || 20
+      } 
+    });
+    
+    const data = response.data;
+    return {
+      cars: data.cars || [],
+      pagination: {
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+        total: data.count || 0,
+        totalPages: Math.ceil((data.count || 0) / (params?.limit || 20)),
+        hasNext: false,
+        hasPrev: false
+      },
+      query: params.q,
+      filters: {
+        minPrice: params.minPrice,
+        maxPrice: params.maxPrice,
+        year: params.year
+      }
+    };
   },
 
   // Get statistics
   getStats: async (): Promise<StatsResponse> => {
-    const response = await api.get('/api/cars/stats');
-    return response.data;
+    try {
+      const response = await api.get('/api/get-all-cars');
+      const data = response.data;
+      
+      // Transform collections data to stats format
+      const collections = data.collections || [];
+      const allCars: Car[] = [];
+      const brands = new Set<string>();
+      const locations = new Set<string>();
+      let minYear = Infinity;
+      let maxYear = -Infinity;
+      
+      collections.forEach((collection: any) => {
+        if (collection.cars && Array.isArray(collection.cars)) {
+          allCars.push(...collection.cars);
+          brands.add(collection.brand);
+          
+          collection.cars.forEach((car: Car) => {
+            if (car.location) locations.add(car.location);
+            if (car.year) {
+              minYear = Math.min(minYear, car.year);
+              maxYear = Math.max(maxYear, car.year);
+            }
+          });
+        }
+      });
+      
+      return {
+        totalCars: allCars.length,
+        totalCollections: collections.length,
+        brands: Array.from(brands),
+        uniqueLocations: locations.size,
+        yearRange: minYear !== Infinity ? { min: minYear, max: maxYear } : undefined,
+        collections: collections.map((c: any) => ({
+          key: c.key,
+          brand: c.brand,
+          model: c.model,
+          totalCars: c.count,
+          scrapedAt: c.lastUpdated
+        }))
+      };
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      return {
+        totalCars: 0,
+        totalCollections: 0,
+        brands: [],
+        uniqueLocations: 0,
+        collections: []
+      };
+    }
   },
 
   // Get specific brand/model collection
   getCollection: async (brand: string, model: string): Promise<Collection> => {
-    const response = await api.get(`/api/cars/${brand}/${model}`);
+    const response = await api.get('/api/get-cars', { 
+      params: { brand, model } 
+    });
     return response.data;
   },
 
   // Legacy endpoints for backward compatibility
   getAllCollections: async () => {
-    const response = await api.get('/get-all-cars');
+    const response = await api.get('/api/get-all-cars');
     return response.data;
   },
 
@@ -166,7 +266,7 @@ export const carsApi = {
     });
     if (limit) params.append('limit', limit);
     
-    const response = await api.get(`/search-autos?${params}`);
+    const response = await api.get(`/api/search-autos?${params}`);
     return response.data;
   },
 };
