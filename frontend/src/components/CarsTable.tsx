@@ -14,7 +14,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { ChevronUp, ChevronDown, Search, ExternalLink, Filter, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, Search, ExternalLink, Filter, X, Grid, List, Calendar, Gauge, MapPin, User } from 'lucide-react';
 import { getDollarRate, convertToUSD, formatUSD, getOriginalPriceDisplay } from '@/lib/currency';
 
 interface Car {
@@ -71,6 +71,98 @@ const SimpleSelect: React.FC<{
   </select>
 );
 
+// Mobile Car Card Component
+const MobileCarCard: React.FC<{ car: Car }> = ({ car }) => {
+  const formatKilometers = (km?: number) => {
+    if (!km) return null;
+    return `${km.toLocaleString()} km`;
+  };
+
+  const getImageUrl = (thumbnail?: string) => {
+    if (!thumbnail) return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0NEwyOCAzMkgyMFYyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+    return thumbnail;
+  };
+
+  return (
+    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
+      <CardHeader className="p-0">
+        <div className="relative">
+          <img
+            src={getImageUrl(car.thumbnail)}
+            alt={car.title}
+            className="w-full h-40 sm:h-48 object-cover rounded-t-lg"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0NEwyOCAzMkgyMFYyMFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+            }}
+          />
+          {car.year && (
+            <Badge className="absolute top-2 right-2 bg-blue-600 text-white">
+              {car.year}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 flex flex-col p-3 sm:p-4">
+        <CardTitle className="text-sm sm:text-lg mb-2 line-clamp-2 min-h-[2.5rem] sm:min-h-[3.5rem]">
+          {car.title}
+        </CardTitle>
+        
+        <div className="flex-1 space-y-2 mb-3">
+          <div className="text-lg sm:text-2xl font-bold text-green-600">
+            {formatUSD(car.priceUSD || 0)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {getOriginalPriceDisplay(car.price)}
+          </div>
+          
+          <div className="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
+            {car.year && (
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>{car.year}</span>
+              </div>
+            )}
+            
+            {car.kilometers && (
+              <div className="flex items-center gap-1">
+                <Gauge className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>{formatKilometers(car.kilometers)}</span>
+              </div>
+            )}
+            
+            {car.location && (
+              <div className="flex items-center gap-1 min-w-0">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">{car.location}</span>
+              </div>
+            )}
+          </div>
+          
+          {car.seller && (
+            <div className="flex items-center gap-1 text-xs sm:text-sm">
+              <User className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="text-gray-600 truncate">
+                {car.seller.type} {car.seller.name && `- ${car.seller.name}`}
+              </span>
+            </div>
+          )}
+        </div>
+        
+        <Button 
+          className="w-full mt-auto text-xs sm:text-sm py-2" 
+          onClick={() => window.open(car.link, '_blank')}
+          disabled={!car.link}
+        >
+          <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+          Ver detalle
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
 const columnHelper = createColumnHelper<Car>();
 
 export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
@@ -79,6 +171,7 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
   const [globalFilter, setGlobalFilter] = useState('');
   const [dollarRate, setDollarRate] = useState<number>(1170);
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [filters, setFilters] = useState<FilterState>({
     priceRange: { min: '', max: '' },
     yearRange: { min: '', max: '' },
@@ -89,6 +182,18 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
 
   // Refs for virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Check screen size and set default view mode
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isMobile = window.innerWidth < 768; // md breakpoint
+      setViewMode(isMobile ? 'cards' : 'table');
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   // Fetch dollar rate on component mount
   useEffect(() => {
@@ -198,114 +303,57 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
       }),
       columnHelper.accessor('kilometers', {
         header: 'Kilometers',
-        cell: (info) => (
-          <div className="text-sm text-center">
-            {info.getValue()?.toLocaleString() || 'N/A'}
-          </div>
-        ),
-        size: 110,
+        cell: (info) => {
+          const km = info.getValue();
+          return km ? `${km.toLocaleString()} km` : '-';
+        },
+        size: 120,
         minSize: 100,
-        maxSize: 120,
+        maxSize: 140,
         enableSorting: true,
-        sortingFn: 'basic',
       }),
       columnHelper.accessor('year', {
         header: 'Year',
-        cell: (info) => (
-          <div className="text-sm text-center">
-            {info.getValue() || 'N/A'}
-          </div>
-        ),
-        size: 70,
-        minSize: 60,
-        maxSize: 80,
+        cell: (info) => info.getValue() || '-',
+        size: 80,
+        minSize: 70,
+        maxSize: 90,
         enableSorting: true,
-        sortingFn: 'basic',
       }),
       columnHelper.accessor('location', {
         header: 'Location',
-        cell: (info) => (
-          <div className="text-sm truncate" title={info.getValue()}>
-            {info.getValue() || 'N/A'}
-          </div>
-        ),
-        size: 140,
-        minSize: 120,
-        maxSize: 160,
+        cell: (info) => info.getValue() || '-',
+        size: 150,
+        minSize: 130,
+        maxSize: 170,
         enableSorting: true,
       }),
-      columnHelper.accessor('seller', {
+      columnHelper.accessor('seller.type', {
         header: 'Seller',
-        cell: (info) => {
-          const seller = info.getValue();
-          return (
-            <div className="text-sm">
-              {seller ? (
-                <div>
-                  <div className="font-medium truncate" title={seller.name}>{seller.name}</div>
-                  <Badge variant="outline" className="text-xs">
-                    {seller.type}
-                  </Badge>
-                </div>
-              ) : 'N/A'}
-            </div>
-          );
-        },
-        size: 140,
-        minSize: 120,
-        maxSize: 160,
+        cell: (info) => info.getValue() || '-',
+        size: 100,
+        minSize: 90,
+        maxSize: 120,
         enableSorting: true,
-        sortingFn: (rowA, rowB) => {
-          const sellerA = rowA.original.seller?.name || '';
-          const sellerB = rowB.original.seller?.name || '';
-          return sellerA.localeCompare(sellerB);
-        },
-      }),
-      columnHelper.accessor('features', {
-        header: 'Features',
-        cell: (info) => (
-          <div className="flex flex-wrap gap-1">
-            {info.getValue()?.slice(0, 2).map((feature, index) => (
-              <Badge key={index} variant="secondary" className="text-xs truncate max-w-20" title={feature}>
-                {feature}
-              </Badge>
-            ))}
-            {(info.getValue()?.length || 0) > 2 && (
-              <Badge variant="outline" className="text-xs">
-                +{(info.getValue()?.length || 0) - 2}
-              </Badge>
-            )}
-          </div>
-        ),
-        enableSorting: false,
-        size: 180,
-        minSize: 150,
-        maxSize: 200,
       }),
       columnHelper.display({
         id: 'actions',
         header: 'Actions',
         cell: (info) => (
-          <div className="flex justify-center">
-            {info.row.original.link && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(info.row.original.link, '_blank')}
-                title="View on MercadoLibre"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+          <Button
+            size="sm"
+            onClick={() => window.open(info.row.original.link, '_blank')}
+            disabled={!info.row.original.link}
+          >
+            <ExternalLink className="w-4 h-4" />
+          </Button>
         ),
-        size: 90,
-        minSize: 80,
-        maxSize: 100,
-        enableSorting: false,
+        size: 80,
+        minSize: 70,
+        maxSize: 90,
       }),
     ],
-    [dollarRate]
+    []
   );
 
   const table = useReactTable({
@@ -322,17 +370,27 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    enableSorting: true,
   });
 
-  // Virtualization setup
   const { rows } = table.getRowModel();
+
+  // Virtualization for table
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 80, // Estimated row height
-    overscan: 10, // Render extra rows for smooth scrolling
+    estimateSize: () => 60,
+    overscan: 10,
   });
+
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      filters.priceRange.min || filters.priceRange.max ||
+      filters.yearRange.min || filters.yearRange.max ||
+      filters.kmRange.min || filters.kmRange.max ||
+      filters.location || filters.sellerType || globalFilter
+    );
+  }, [filters, globalFilter]);
 
   const clearFilters = () => {
     setFilters({
@@ -345,56 +403,170 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
     setGlobalFilter('');
   };
 
-  const hasActiveFilters = Object.values(filters).some(filter => 
-    typeof filter === 'string' ? filter !== '' : filter.min !== '' || filter.max !== ''
-  ) || globalFilter !== '';
+  // Cards view for mobile
+  const renderCardsView = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {filteredCars.map((car) => (
+        <MobileCarCard key={car.id} car={car} />
+      ))}
+    </div>
+  );
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading cars...</p>
-            </div>
+  // Table view for desktop
+  const renderTableView = () => (
+    <div className="rounded-md border">
+      {/* Table Header */}
+      <div className="border-b bg-gray-50 overflow-x-auto">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <div key={headerGroup.id} className="flex min-w-[800px]">
+            {headerGroup.headers.map((header) => (
+              <div
+                key={header.id}
+                className="px-3 py-2 text-left text-sm font-medium text-gray-900 border-r last:border-r-0"
+                style={{ width: header.getSize() }}
+              >
+                {header.isPlaceholder ? null : (
+                  <div
+                    className={`flex items-center space-x-1 ${
+                      header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100 rounded px-1 py-1' : ''
+                    }`}
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    <span>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </span>
+                    {header.column.getCanSort() && (
+                      <div className="flex flex-col">
+                        <ChevronUp
+                          className={`w-3 h-3 ${
+                            header.column.getIsSorted() === 'asc'
+                              ? 'text-blue-600'
+                              : 'text-gray-400'
+                          }`}
+                        />
+                        <ChevronDown
+                          className={`w-3 h-3 -mt-1 ${
+                            header.column.getIsSorted() === 'desc'
+                              ? 'text-blue-600'
+                              : 'text-gray-400'
+                          }`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
+        ))}
+      </div>
+
+      {/* Virtualized Table Body */}
+      <div
+        ref={tableContainerRef}
+        className="h-[600px] overflow-auto"
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          <div className="min-w-[800px]">
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              return (
+                <div
+                  key={row.id}
+                  className="flex border-b hover:bg-gray-50 absolute w-full"
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <div
+                      key={cell.id}
+                      className="px-4 py-3 border-r last:border-r-0 flex items-center"
+                      style={{ width: cell.column.getSize() }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            Cars ({filteredCars.length} of {cars.length} total)
-            <Badge variant="outline" className="text-xs">
-              Rate: 1 USD = {dollarRate} ARS
-            </Badge>
-          </CardTitle>
-          <div className="flex items-center space-x-2">
-            <div className="relative">
+        <div className="flex flex-col space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle className="text-xl font-semibold">
+              Cars ({filteredCars.length.toLocaleString()})
+              <div className="text-xs text-gray-500 font-normal">
+                Rate: 1 USD = {dollarRate} ARS
+              </div>
+            </CardTitle>
+            
+            {/* View Mode Toggle - Hidden on mobile since it auto-switches */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                <List className="w-4 h-4 mr-2" />
+                Table
+              </Button>
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+              >
+                <Grid className="w-4 h-4 mr-2" />
+                Cards
+              </Button>
+            </div>
+          </div>
+
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Search cars..."
                 value={globalFilter ?? ''}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10"
               />
             </div>
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? 'bg-blue-50' : ''}
+              className="whitespace-nowrap"
             >
               <Filter className="w-4 h-4 mr-2" />
               Filters
+              {hasActiveFilters && (
+                <Badge variant="destructive" className="ml-2 h-4 w-4 p-0 text-xs">
+                  !
+                </Badge>
+              )}
             </Button>
             {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
+              <Button
+                variant="ghost"
+                onClick={clearFilters}
+                size="sm"
+                className="whitespace-nowrap"
+              >
                 <X className="w-4 h-4 mr-2" />
                 Clear
               </Button>
@@ -404,7 +576,7 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             {/* Price Range */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Price Range (USD)</label>
@@ -509,103 +681,21 @@ export const CarsTable: React.FC<CarsTableProps> = ({ cars, isLoading }) => {
         )}
       </CardHeader>
       <CardContent>
-        {/* Virtualized Table */}
-        <div className="rounded-md border">
-          {/* Table Header */}
-          <div className="border-b bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <div key={headerGroup.id} className="flex">
-                {headerGroup.headers.map((header) => (
-                  <div
-                    key={header.id}
-                    className="px-3 py-2 text-left text-sm font-medium text-gray-900 border-r last:border-r-0"
-                    style={{ width: header.getSize() }}
-                  >
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={`flex items-center space-x-1 ${
-                          header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-100 rounded px-1 py-1' : ''
-                        }`}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        <span>
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </span>
-                        {header.column.getCanSort() && (
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              className={`w-3 h-3 ${
-                                header.column.getIsSorted() === 'asc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                            <ChevronDown
-                              className={`w-3 h-3 -mt-1 ${
-                                header.column.getIsSorted() === 'desc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          {/* Virtualized Table Body */}
-          <div
-            ref={tableContainerRef}
-            className="h-[600px] overflow-auto"
-          >
-            <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-                width: '100%',
-                position: 'relative',
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const row = rows[virtualRow.index];
-                return (
-                  <div
-                    key={row.id}
-                    className="flex border-b hover:bg-gray-50 absolute w-full"
-                    style={{
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <div
-                        key={cell.id}
-                        className="px-4 py-3 border-r last:border-r-0 flex items-center"
-                        style={{ width: cell.column.getSize() }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        {/* Render based on view mode */}
+        {viewMode === 'cards' ? renderCardsView() : renderTableView()}
 
         {/* Results Summary */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
             <p className="text-sm text-gray-700">
-              Showing {rows.length} of {filteredCars.length} cars
+              Showing {filteredCars.length} of {enhancedCars.length} cars
               {globalFilter && ` (filtered by "${globalFilter}")`}
             </p>
-            <Badge variant="outline" className="text-xs">
-              Virtualized - Smooth scrolling for large datasets
-            </Badge>
+            {viewMode === 'table' && (
+              <Badge variant="outline" className="text-xs w-fit">
+                Virtualized - Smooth scrolling for large datasets
+              </Badge>
+            )}
           </div>
           {hasActiveFilters && (
             <div className="text-sm text-blue-600">

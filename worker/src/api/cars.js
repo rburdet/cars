@@ -27,6 +27,8 @@ export class CarsAPI {
                 return this.searchCars(url, corsHeaders);
             } else if (path === '/api/cars/stats' && method === 'GET') {
                 return this.getStats(corsHeaders);
+            } else if (path === '/api/store-cars' && method === 'POST') {
+                return this.storeCars(request, corsHeaders);
             } else if (path.startsWith('/api/cars/') && method === 'GET') {
                 const brand = path.split('/')[3];
                 const model = path.split('/')[4];
@@ -284,6 +286,83 @@ export class CarsAPI {
             });
         } catch (error) {
             return new Response(JSON.stringify({ error: 'Failed to get stats' }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+    }
+
+    async storeCars(request, corsHeaders) {
+        try {
+            const body = await request.json();
+            const { brand, model, cars } = body;
+
+            if (!brand || !model || !cars || !Array.isArray(cars)) {
+                return new Response(JSON.stringify({ 
+                    error: 'Invalid data: brand, model, and cars array are required' 
+                }), {
+                    status: 400,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+
+            // Create the collection key
+            const key = `${brand.toLowerCase()}-${model.toLowerCase()}`;
+
+            // Get existing collection data first
+            let existingData = null;
+            try {
+                const existing = await this.env.CAR_LISTINGS.get(key);
+                if (existing) {
+                    existingData = JSON.parse(existing);
+                }
+            } catch (error) {
+                console.log('No existing data found, creating new collection');
+            }
+
+            let finalCars = cars;
+            let totalCars = cars.length;
+
+            if (existingData && existingData.cars) {
+                // Merge enhanced cars with existing cars
+                const enhancedCarIds = new Set(cars.map(car => car.id));
+                const existingCarsToKeep = existingData.cars.filter(car => !enhancedCarIds.has(car.id));
+                
+                finalCars = [...existingCarsToKeep, ...cars];
+                totalCars = finalCars.length;
+                
+                console.log(`Merging ${cars.length} enhanced cars with ${existingCarsToKeep.length} existing cars`);
+            }
+
+            // Prepare the data to store
+            const collectionData = {
+                brand: brand,
+                model: model,
+                key: key,
+                totalCars: totalCars,
+                cars: finalCars,
+                scrapedAt: existingData?.scrapedAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            // Store in KV
+            await this.env.CAR_LISTINGS.put(key, JSON.stringify(collectionData));
+
+            return new Response(JSON.stringify({ 
+                message: 'Cars stored successfully',
+                key: key,
+                totalCars: finalCars.length,
+                enhancedCars: cars.length,
+                mergedWithExisting: existingData ? existingData.cars.length : 0
+            }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+
+        } catch (error) {
+            console.error('Error storing cars:', error);
+            return new Response(JSON.stringify({ 
+                error: 'Failed to store cars: ' + error.message 
+            }), {
                 status: 500,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
